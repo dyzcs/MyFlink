@@ -5,6 +5,9 @@ import org.apache.flink.streaming.api.scala._
 
 /**
  * Created by Administrator on 2021/1/27.
+ *
+ * 运行参数: --host 127.0.0.1 --port 9999
+ * 使用nc(windows): nc -l -k 9999
  */
 object StreamWordCount {
     def main(args: Array[String]): Unit = {
