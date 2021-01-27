@@ -23,11 +23,11 @@ object SourceTest {
         )
 
         val stream1 = env.fromCollection(dataList)
-
         stream1.print("flink source from collection")
 
         // 2.从文件中读取数据
-        val stream2 = env.readTextFile("")
+        val stream2 = env.readTextFile("sensor.txt")
+        stream2.print("flink source from file")
 
         env.execute()
     }
