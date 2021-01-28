@@ -25,7 +25,10 @@ object FileSinkTest {
         // 控制台输出
 //        dataStream.print()
 
+        // 输出为csv文件
 //        dataStream.writeAsCsv("src/main/resources/out.csv")
+
+        // 输出为 out.日期 文件夹
         dataStream.addSink(
             StreamingFileSink.forRowFormat(
                 new Path("src/main/resources/out"),
