@@ -1,7 +1,7 @@
 package com.dyzcs
 
 import com.dyzcs.apitest.SensorReading
-import org.apache.flink.api.common.functions.FilterFunction
+import org.apache.flink.api.common.functions.{FilterFunction, ReduceFunction}
 import org.apache.flink.streaming.api.scala._
 
 /**
@@ -32,7 +32,13 @@ object TransformTest {
                 .reduce((curState, newData) => {
                     SensorReading(curState.id, newData.timestamp, curState.temperature.min(newData.temperature))
                 })
-        resultStream1.print("result")
+        resultStream1.print("result1")
+
+        val resultStream2 = dataStream.keyBy(_.id)
+                .reduce(new MyReduceFunction)
+        resultStream2.print("result2")
+
+        val splitStream = dataStream.getSideOutput(OutputTag[SensorReading]())
 
         env.execute("flink transform test")
     }
@@ -41,4 +47,9 @@ object TransformTest {
 class MyFilter extends FilterFunction[SensorReading] {
     override def filter(value: SensorReading): Boolean =
         value.id.startsWith("sensor_1")
+}
+
+class MyReduceFunction extends ReduceFunction[SensorReading]{
+    override def reduce(value1: SensorReading, value2: SensorReading): SensorReading =
+        SensorReading(value1.id, value2.timestamp, value1.temperature.min(value2.temperature))
 }
