@@ -28,7 +28,7 @@ object FileSinkTest {
 //        dataStream.writeAsCsv("src/main/resources/out.csv")
         dataStream.addSink(
             StreamingFileSink.forRowFormat(
-                new Path("src/main/resources/out.txt"),
+                new Path("src/main/resources/out"),
                 new SimpleStringEncoder[SensorReading]()
             ).build()
         )
