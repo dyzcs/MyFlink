@@ -1,4 +1,4 @@
-package com.dyzcs
+package com.dyzcs.apitest
 
 import org.apache.flink.api.common.serialization.SimpleStringSchema
 import org.apache.flink.streaming.api.functions.source.SourceFunction
