@@ -1,8 +1,11 @@
 package com.dyzcs
 
+import org.apache.flink.api.common.serialization.SimpleStringSchema
 import org.apache.flink.streaming.api.functions.source.SourceFunction
 import org.apache.flink.streaming.api.scala._
+import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer
 
+import java.util.Properties
 import scala.util.Random
 
 /**
@@ -26,15 +29,24 @@ object SourceTest {
         )
 
         val stream1 = env.fromCollection(dataList)
-        stream1.print("flink source from collection")
+        //        stream1.print("flink source from collection")
 
         // 2.从文件中读取数据
         val stream2 = env.readTextFile("src/main/resources/sensor.txt")
-        stream2.print("flink source from file")
+        //        stream2.print("flink source from file")
+
+        // 3.从kafka中读取数据
+        val properties = new Properties()
+        properties.setProperty("bootstrap.servers", "s183:9092")
+        properties.setProperty("group.id", "consumer-group")
+        val stream3 =
+            env.addSource(new FlinkKafkaConsumer[String]("sensor", new SimpleStringSchema(), properties))
+
+        stream3.print("flink source from kafka")
 
         // 4.自定义source
-        val stream4 = env.addSource(new MySensorSource)
-        stream4.print("flink custom source")
+        //        val stream4 = env.addSource(new MySensorSource)
+        //        stream4.print("flink custom source")
 
         env.execute()
     }
