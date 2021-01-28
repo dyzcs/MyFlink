@@ -22,7 +22,8 @@ object FileSinkTest {
         // 控制台输出
 //        dataStream.print()
 
-        dataStream.writeAsCsv("src/main/resources/out.csv")
+//        dataStream.writeAsCsv("src/main/resources/out.csv")
+        dataStream.
 
         env.execute("file sink to file")
     }
