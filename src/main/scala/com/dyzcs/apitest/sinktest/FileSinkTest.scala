@@ -1,6 +1,9 @@
 package com.dyzcs.apitest.sinktest
 
 import com.dyzcs.apitest.SensorReading
+import org.apache.flink.api.common.serialization.SimpleStringEncoder
+import org.apache.flink.core.fs.Path
+import org.apache.flink.streaming.api.functions.sink.filesystem.StreamingFileSink
 import org.apache.flink.streaming.api.scala._
 
 /**
@@ -23,7 +26,12 @@ object FileSinkTest {
 //        dataStream.print()
 
 //        dataStream.writeAsCsv("src/main/resources/out.csv")
-        dataStream.
+        dataStream.addSink(
+            StreamingFileSink.forRowFormat(
+                new Path("src/main/resources/out.txt"),
+                new SimpleStringEncoder[SensorReading]()
+            ).build()
+        )
 
         env.execute("file sink to file")
     }
