@@ -1,7 +1,8 @@
 package com.dyzcs
 
 import com.dyzcs.apitest.SensorReading
-import org.apache.flink.api.common.functions.{FilterFunction, MapFunction, ReduceFunction}
+import org.apache.flink.api.common.functions.{FilterFunction, MapFunction, ReduceFunction, RichMapFunction}
+import org.apache.flink.configuration.Configuration
 import org.apache.flink.streaming.api.functions.ProcessFunction
 import org.apache.flink.streaming.api.scala._
 import org.apache.flink.util.Collector
@@ -85,4 +86,17 @@ class MyReduceFunction extends ReduceFunction[SensorReading]{
 
 class MyMapper extends MapFunction[SensorReading,String] {
     override def map(value: SensorReading): String = value.id + " hello"
+}
+
+// 富函数: 可以获取到运行时上下文，还有一些生命周期
+class MyRichMapper extends RichMapFunction[SensorReading, String] {
+    override def open(parameters: Configuration): Unit = {
+        // 初始化操作，比如数据库连接
+    }
+
+    override def map(value: SensorReading): String = value.id + " world"
+
+    override def close(): Unit = {
+        // 收尾工作，比如关闭连接或者清空状态
+    }
 }
