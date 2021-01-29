@@ -1,7 +1,7 @@
 package com.dyzcs
 
 import com.dyzcs.apitest.SensorReading
-import org.apache.flink.api.common.functions.{FilterFunction, ReduceFunction}
+import org.apache.flink.api.common.functions.{FilterFunction, MapFunction, ReduceFunction}
 import org.apache.flink.streaming.api.functions.ProcessFunction
 import org.apache.flink.streaming.api.scala._
 import org.apache.flink.util.Collector
@@ -52,8 +52,22 @@ object TransformTest {
             }
         })
 
-        sideOutStream.getSideOutput(lowTag).print("low")
-        sideOutStream.getSideOutput(high).print("high")
+        val lowStream = sideOutStream.getSideOutput(lowTag)
+//        lowStream.print("low")
+        val highStream = sideOutStream.getSideOutput(high)
+//        highStream.print("high")
+
+        val unionStream = lowStream.union(highStream)
+//        unionStream.print("union")
+
+        val connectStream = lowStream.connect(highStream).map(
+            d1 => (d1.id, "low"),
+            d2 => (d2.id, "high")
+        )
+//        connectStream.print("connect")
+
+        val myMapperStream = dataStream.map(new MyMapper)
+        myMapperStream.print("myMapper")
 
         env.execute("flink transform test")
     }
@@ -67,4 +81,8 @@ class MyFilter extends FilterFunction[SensorReading] {
 class MyReduceFunction extends ReduceFunction[SensorReading]{
     override def reduce(value1: SensorReading, value2: SensorReading): SensorReading =
         SensorReading(value1.id, value2.timestamp, value1.temperature.min(value2.temperature))
+}
+
+class MyMapper extends MapFunction[SensorReading,String] {
+    override def map(value: SensorReading): String = value.id + " hello"
 }
