@@ -40,7 +40,7 @@ object SideOutputTest {
 
         val lowStringTag = new OutputTag[String]("low id")
         val highStringTag = new OutputTag[String]("high id")
-        val sideOutputStream2 = dataStream.process(new MySideOut(9D))
+        val sideOutputStream2 = dataStream.process(new MySideOut(9D, lowStringTag, highStringTag))
         sideOutputStream2.getSideOutput(lowStringTag).print("low id")
         sideOutputStream2.getSideOutput(highStringTag).print("high id")
 
@@ -48,12 +48,13 @@ object SideOutputTest {
     }
 }
 
-class MySideOut(flag: Double) extends ProcessFunction[SensorReading, String] {
+// arr:OutputTag[String]* 可变长度参数
+class MySideOut(flag: Double, arr:OutputTag[String]*) extends ProcessFunction[SensorReading, String] {
     override def processElement(value: SensorReading, ctx: ProcessFunction[SensorReading, String]#Context, out: Collector[String]): Unit = {
         if (value.temperature <= flag) {
-            ctx.output(new OutputTag[String]("low id"), value.id)
+            ctx.output(arr(0), value.id)
         } else {
-            ctx.output(new OutputTag[String]("high id"), value.id)
+            ctx.output(arr(1), value.id)
         }
     }
 }
