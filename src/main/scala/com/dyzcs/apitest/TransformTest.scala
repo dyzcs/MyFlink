@@ -1,6 +1,5 @@
-package com.dyzcs
+package com.dyzcs.apitest
 
-import com.dyzcs.apitest.SensorReading
 import org.apache.flink.api.common.functions.{FilterFunction, MapFunction, ReduceFunction, RichMapFunction}
 import org.apache.flink.configuration.Configuration
 import org.apache.flink.streaming.api.functions.ProcessFunction
