@@ -2,7 +2,9 @@ package com.dyzcs
 
 import com.dyzcs.apitest.SensorReading
 import org.apache.flink.api.common.functions.{FilterFunction, ReduceFunction}
+import org.apache.flink.streaming.api.functions.ProcessFunction
 import org.apache.flink.streaming.api.scala._
+import org.apache.flink.util.Collector
 
 /**
  * Created by Administrator on 2021/1/28.
@@ -20,25 +22,38 @@ object TransformTest {
 
         // 继承FilterFunction完成过滤
         val filterStream = dataStream.filter(new MyFilter)
-        filterStream.print("filter")
+//        filterStream.print("filter")
 
         // 分组聚合，输出每个传感器当前最小值
         // 根据id分组
         val aggStream = dataStream.keyBy(_.id)
                 .minBy("temperature")
-        aggStream.print("agg")
+//        aggStream.print("agg")
 
         val resultStream1 = dataStream.keyBy(_.id)
                 .reduce((curState, newData) => {
                     SensorReading(curState.id, newData.timestamp, curState.temperature.min(newData.temperature))
                 })
-        resultStream1.print("result1")
+//        resultStream1.print("result1")
 
         val resultStream2 = dataStream.keyBy(_.id)
                 .reduce(new MyReduceFunction)
-        resultStream2.print("result2")
+//        resultStream2.print("result2")
 
-        val splitStream = dataStream.getSideOutput(OutputTag[SensorReading]())
+        val lowTag = new OutputTag[SensorReading]("low");
+        val high = new OutputTag[SensorReading]("high")
+        val sideOutStream = dataStream.process(new ProcessFunction[SensorReading, SensorReading] {
+            override def processElement(value: SensorReading, ctx: ProcessFunction[SensorReading, SensorReading]#Context, out: Collector[SensorReading]): Unit = {
+                if (value.temperature <= 10) {
+                    ctx.output(lowTag, value)
+                } else {
+                    ctx.output(high, value)
+                }
+            }
+        })
+
+        sideOutStream.getSideOutput(lowTag).print("low")
+        sideOutStream.getSideOutput(high).print("high")
 
         env.execute("flink transform test")
     }
