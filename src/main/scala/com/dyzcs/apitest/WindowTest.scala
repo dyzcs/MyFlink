@@ -2,7 +2,7 @@ package com.dyzcs.apitest
 
 import org.apache.flink.api.common.functions.ReduceFunction
 import org.apache.flink.streaming.api.scala._
-import org.apache.flink.streaming.api.windowing.assigners.{EventTimeSessionWindows, SlidingEventTimeWindows, TumblingEventTimeWindows}
+import org.apache.flink.streaming.api.windowing.assigners.{EventTimeSessionWindows, SlidingEventTimeWindows, TumblingEventTimeWindows, TumblingProcessingTimeWindows}
 import org.apache.flink.streaming.api.windowing.time.Time
 
 /**
@@ -25,9 +25,10 @@ object WindowTest {
                 // .window(SlidingEventTimeWindows.of(Time.seconds(15), Time.seconds(5)))  // 滑动时间窗口
                 // .window(EventTimeSessionWindows.withGap(Time.seconds(10)))  // 会话窗口
                 // .countWindow(10)    // 滚动计数窗口
-                .window(TumblingEventTimeWindows.of(Time.seconds(15))) // 滚动时间窗口
-//                .reduce((curRes, newRes) => SensorReading(curRes.id, curRes.timestamp.max(newRes.timestamp), curRes.temperature.min(newRes.temperature)))
+                .window(TumblingProcessingTimeWindows.of(Time.seconds(15))) // 滚动时间窗口
+                // .reduce((curRes, newRes) => SensorReading(curRes.id, curRes.timestamp.max(newRes.timestamp), curRes.temperature.min(newRes.temperature)))
                 .reduce(new MyReducer)
+        //                .minBy(2)
 
         resultStream.print("result")
 
