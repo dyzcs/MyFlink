@@ -20,6 +20,19 @@ object StateTest {
             SensorReading(arr(0), arr(1).toLong, arr(2).toDouble)
         })
 
+        // 需求: 对于传感器温度值跳变，超过10度，报警
+        val alertStream = dataStream.keyBy(_.id)
+                .flatMapWithState[SensorReading, Double] {
+                    case (data: SensorReading, None) => (List.empty, Some(data.temperature))
+                    case (data: SensorReading, lastTemp: Some[Double]) =>
+                        val diff = (data.temperature - lastTemp.get).abs
+                        if (diff > 10.0) {
+                            (List(SensorReading(data.id, lastTemp.get.toLong, data.temperature)), Some(data.temperature))
+                        } else {
+                            (List.empty, Some(data.temperature))
+                        }
+                }
+
         env.execute("flink state test")
     }
 }
@@ -38,7 +51,7 @@ class MyRichMapper extends RichMapFunction[SensorReading, String] {
 
     lazy val reduceState: ReducingState[SensorReading] =
         getRuntimeContext.getReducingState(
-            new ReducingStateDescriptor[SensorReading]("reduceState",new MyReducer, classOf[SensorReading]))
+            new ReducingStateDescriptor[SensorReading]("reduceState", new MyReducer, classOf[SensorReading]))
 
     // 第二种实现方法: 将变量声明在外面
     var valueState: ValueState[Double] = _
