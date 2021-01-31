@@ -1,9 +1,14 @@
 package com.dyzcs.apitest
 
+import org.apache.flink.api.common.eventtime.{SerializableTimestampAssigner, WatermarkStrategy}
 import org.apache.flink.api.common.functions.ReduceFunction
+import org.apache.flink.streaming.api.TimeCharacteristic
+import org.apache.flink.streaming.api.functions.timestamps.BoundedOutOfOrdernessTimestampExtractor
 import org.apache.flink.streaming.api.scala._
 import org.apache.flink.streaming.api.windowing.assigners.{EventTimeSessionWindows, SlidingEventTimeWindows, TumblingEventTimeWindows, TumblingProcessingTimeWindows}
 import org.apache.flink.streaming.api.windowing.time.Time
+
+import java.time.Duration
 
 /**
  * Created by Administrator on 2021/1/30.
@@ -12,12 +17,26 @@ object WindowTest {
     def main(args: Array[String]): Unit = {
         val env = StreamExecutionEnvironment.getExecutionEnvironment
         env.setParallelism(1)
+        // flink 1.12之后默认是这个
+        // env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
+        // 生成watermark间隔
+        env.getConfig.setAutoWatermarkInterval(50)
 
         val inputStream = env.socketTextStream("localhost", 9999)
         val dataStream = inputStream.map(data => {
             val arr = data.split(",")
             SensorReading(arr(0), arr(1).toLong, arr(2).toDouble)
         })
+                //        .assignTimestampsAndWatermarks(
+                //            WatermarkStrategy.forBoundedOutOfOrderness(Duration.ofSeconds(3))
+                //                    .withTimestampAssigner(new SerializableTimestampAssigner[SensorReading] {
+                //            override def extractTimestamp(element: SensorReading, recordTimestamp: Long): Long = element.timestamp * 1000L
+                //        }))
+                // .assignAscendingTimestamps(_.timestamp * 1000L)   // 升序数据提取时间戳
+                .assignTimestampsAndWatermarks(new BoundedOutOfOrdernessTimestampExtractor[SensorReading](Time.seconds(3)) {
+                    override def extractTimestamp(element: SensorReading): Long = element.timestamp * 1000L
+                })
+
 
         // 每15秒统计一次，窗口内各传感器温度的最小值，以及最新的时间戳
         val resultStream = dataStream.keyBy(_.id)
