@@ -1,7 +1,7 @@
 package com.dyzcs.apitest
 
 import org.apache.flink.api.common.functions.RichMapFunction
-import org.apache.flink.api.common.state.{ListState, ListStateDescriptor, MapState, MapStateDescriptor, ValueState, ValueStateDescriptor}
+import org.apache.flink.api.common.state.{ListState, ListStateDescriptor, MapState, MapStateDescriptor, ReducingState, ReducingStateDescriptor, ValueState, ValueStateDescriptor}
 import org.apache.flink.configuration.Configuration
 import org.apache.flink.streaming.api.scala._
 
@@ -35,6 +35,10 @@ class MyRichMapper extends RichMapFunction[SensorReading, String] {
     lazy val mapState: MapState[Double, Int] =
         getRuntimeContext.getMapState(
             new MapStateDescriptor[Double, Int]("mapState", classOf[Double], classOf[Int]))
+
+    lazy val reduceState: ReducingState[SensorReading] =
+        getRuntimeContext.getReducingState(
+            new ReducingStateDescriptor[SensorReading]("reduceState",new MyReducer, classOf[SensorReading]))
 
     // 第二种实现方法: 将变量声明在外面
     var valueState: ValueState[Double] = _
