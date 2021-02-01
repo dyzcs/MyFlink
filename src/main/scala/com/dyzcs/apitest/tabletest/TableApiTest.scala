@@ -57,7 +57,7 @@ object TableApiTest {
                 ).createTemporaryTable("inputTable")
 
         val inputTable = tableEnv.from("inputTable")
-        inputTable.toAppendStream[SensorReading].print("input table")
+        inputTable.toAppendStream[(String, Long, Double)].print("input table")
 
         env.execute("table api test")
     }
