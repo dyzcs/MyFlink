@@ -46,7 +46,7 @@ object TableApiTest {
 
         // 2 连接外部系统，读取数据，注册表
         // 2.1 读取文件
-        val filePath = "src/main/resources/hello.txt"
+        val filePath = "src/main/resources/sensor.txt"
 
         tableEnv.connect(new FileSystem().path(filePath))
                 .withFormat(new OldCsv())
