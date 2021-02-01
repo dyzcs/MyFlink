@@ -5,7 +5,7 @@ import org.apache.flink.api.scala.ExecutionEnvironment
 import org.apache.flink.streaming.api.scala._
 import org.apache.flink.table.api.{DataTypes, EnvironmentSettings, TableEnvironment}
 import org.apache.flink.table.api.bridge.scala._
-import org.apache.flink.table.descriptors.{FileSystem, OldCsv, Schema}
+import org.apache.flink.table.descriptors.{Csv, FileSystem, Kafka, OldCsv, Schema}
 
 /**
  * Created by Administrator on 2021/2/1.
@@ -49,7 +49,7 @@ object TableApiTest {
         val filePath = "src/main/resources/sensor.txt"
 
         tableEnv.connect(new FileSystem().path(filePath))
-                .withFormat(new OldCsv())
+                .withFormat(new Csv())
                 .withSchema(new Schema()
                         .field("id", DataTypes.STRING())
                         .field("timestamp", DataTypes.BIGINT())
@@ -57,8 +57,23 @@ object TableApiTest {
                 ).createTemporaryTable("inputTable")
 
         val inputTable = tableEnv.from("inputTable")
-//        inputTable.toAppendStream[(String, Long, Double)].print("input table")
-        inputTable.toAppendStream[SensorReading].print("input table")
+        //        inputTable.toAppendStream[(String, Long, Double)].print("input table")
+//        inputTable.toAppendStream[SensorReading].print("input table")
+
+        // 2.2 从kafka读取数据
+        tableEnv.connect(new Kafka()
+                .version("universal")
+                .topic("sensor")
+                .property("bootstrap.servers", "s183:9092")
+                .property("group.id", "testGroup")
+        ).withFormat(new Csv()).withSchema(new Schema()
+                .field("id", DataTypes.STRING())
+                .field("timestamp", DataTypes.BIGINT())
+                .field("temperature", DataTypes.DOUBLE())
+        ).createTemporaryTable("kafkaInputTable")
+
+        val kafkaInputTable = tableEnv.from("kafkaInputTable")
+        kafkaInputTable.toAppendStream[(String, Long, Double)].print("kafka input table")
 
         env.execute("table api test")
     }
