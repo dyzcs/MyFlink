@@ -88,7 +88,7 @@ class MyMapper extends MapFunction[SensorReading,String] {
 }
 
 // 富函数: 可以获取到运行时上下文，还有一些生命周期
-class MyRichMapper extends RichMapFunction[SensorReading, String] {
+class MyRichMapper1 extends RichMapFunction[SensorReading, String] {
     override def open(parameters: Configuration): Unit = {
         // 初始化操作，比如数据库连接
     }
