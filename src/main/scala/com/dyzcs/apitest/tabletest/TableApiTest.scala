@@ -3,7 +3,7 @@ package com.dyzcs.apitest.tabletest
 import com.dyzcs.apitest.SensorReading
 import org.apache.flink.api.scala.ExecutionEnvironment
 import org.apache.flink.streaming.api.scala._
-import org.apache.flink.table.api.{DataTypes, EnvironmentSettings, TableEnvironment}
+import org.apache.flink.table.api._
 import org.apache.flink.table.api.bridge.scala._
 import org.apache.flink.table.descriptors.{Csv, FileSystem, Kafka, OldCsv, Schema}
 
@@ -58,7 +58,7 @@ object TableApiTest {
 
         val inputTable = tableEnv.from("inputTable")
         //        inputTable.toAppendStream[(String, Long, Double)].print("input table")
-//        inputTable.toAppendStream[SensorReading].print("input table")
+        //        inputTable.toAppendStream[SensorReading].print("input table")
 
         // 2.2 从kafka读取数据
         tableEnv.connect(new Kafka()
@@ -73,7 +73,24 @@ object TableApiTest {
         ).createTemporaryTable("kafkaInputTable")
 
         val kafkaInputTable = tableEnv.from("kafkaInputTable")
-        kafkaInputTable.toAppendStream[(String, Long, Double)].print("kafka input table")
+        //        kafkaInputTable.toAppendStream[(String, Long, Double)].print("kafka input table")
+
+        // 3 查询转换
+        // 3.1 使用table api
+        val sensorTable = tableEnv.from("inputTable")
+        val resultTable = sensorTable.select('id, 'temperature).filter($"id" === "sensor_10")
+        //        resultTable.toAppendStream[(String, Double)].print()
+
+        // 3.2 sql
+        val resultSqlTable = tableEnv.sqlQuery(
+            """
+              |select id, temperature
+              |from inputTable
+              |where id = 'sensor_1'
+            """.stripMargin)
+
+        resultSqlTable.toAppendStream[(String, Double)].print()
+
 
         env.execute("table api test")
     }
